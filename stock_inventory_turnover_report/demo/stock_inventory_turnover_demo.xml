@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo noupdate="1">
+    <record id="demo_turnover_supplier" model="res.partner">
+        <field name="name">Parafusos Cascavel Indústria e Comércio</field>
+        <field name="is_company" eval="True" />
+    </record>
+
+    <record id="demo_turnover_customer" model="res.partner">
+        <field name="name">Metalúrgica Vale do Itajaí</field>
+        <field name="is_company" eval="True" />
+    </record>
+
+    <record id="demo_turnover_product" model="product.product">
+        <field name="name">Parafuso sextavado M8 x 40</field>
+        <field name="type">consu</field>
+        <field name="is_storable" eval="True" />
+        <field name="standard_price">0.45</field>
+        <field name="list_price">0.9</field>
+    </record>
+
+    <!-- Receipt of 100 units, 9 months ago -->
+    <record id="demo_turnover_picking_in_1" model="stock.picking">
+        <field name="partner_id" ref="demo_turnover_supplier" />
+        <field name="picking_type_id" ref="stock.picking_type_in" />
+        <field name="location_id" ref="stock.stock_location_suppliers" />
+        <field name="location_dest_id" ref="stock.stock_location_stock" />
+    </record>
+    <record id="demo_turnover_move_in_1" model="stock.move">
+        <field name="name">Parafuso sextavado M8 x 40</field>
+        <field name="picking_id" ref="demo_turnover_picking_in_1" />
+        <field name="product_id" ref="demo_turnover_product" />
+        <field name="product_uom_qty">100</field>
+        <field name="quantity">100</field>
+        <field name="picked" eval="True" />
+        <field name="location_id" ref="stock.stock_location_suppliers" />
+        <field name="location_dest_id" ref="stock.stock_location_stock" />
+    </record>
+    <function model="stock.picking" name="button_validate">
+        <value eval="[ref('demo_turnover_picking_in_1')]" />
+    </function>
+
+    <!-- Delivery of 30 units, 4 months ago -->
+    <record id="demo_turnover_picking_out_1" model="stock.picking">
+        <field name="partner_id" ref="demo_turnover_customer" />
+        <field name="picking_type_id" ref="stock.picking_type_out" />
+        <field name="location_id" ref="stock.stock_location_stock" />
+        <field name="location_dest_id" ref="stock.stock_location_customers" />
+    </record>
+    <record id="demo_turnover_move_out_1" model="stock.move">
+        <field name="name">Parafuso sextavado M8 x 40</field>
+        <field name="picking_id" ref="demo_turnover_picking_out_1" />
+        <field name="product_id" ref="demo_turnover_product" />
+        <field name="product_uom_qty">30</field>
+        <field name="quantity">30</field>
+        <field name="picked" eval="True" />
+        <field name="location_id" ref="stock.stock_location_stock" />
+        <field name="location_dest_id" ref="stock.stock_location_customers" />
+    </record>
+    <function model="stock.picking" name="button_validate">
+        <value eval="[ref('demo_turnover_picking_out_1')]" />
+    </function>
+
+    <!-- Receipt of 50 units, 2 months ago -->
+    <record id="demo_turnover_picking_in_2" model="stock.picking">
+        <field name="partner_id" ref="demo_turnover_supplier" />
+        <field name="picking_type_id" ref="stock.picking_type_in" />
+        <field name="location_id" ref="stock.stock_location_suppliers" />
+        <field name="location_dest_id" ref="stock.stock_location_stock" />
+    </record>
+    <record id="demo_turnover_move_in_2" model="stock.move">
+        <field name="name">Parafuso sextavado M8 x 40</field>
+        <field name="picking_id" ref="demo_turnover_picking_in_2" />
+        <field name="product_id" ref="demo_turnover_product" />
+        <field name="product_uom_qty">50</field>
+        <field name="quantity">50</field>
+        <field name="picked" eval="True" />
+        <field name="location_id" ref="stock.stock_location_suppliers" />
+        <field name="location_dest_id" ref="stock.stock_location_stock" />
+    </record>
+    <function model="stock.picking" name="button_validate">
+        <value eval="[ref('demo_turnover_picking_in_2')]" />
+    </function>
+
+    <!-- The pickings were validated now: move the moves back in time -->
+    <function model="stock.move" name="write">
+        <value eval="[ref('demo_turnover_move_in_1')]" />
+        <value
+            eval="{'date': (DateTime.today() - relativedelta(months=9)).strftime('%Y-%m-%d %H:%M:%S')}"
+        />
+    </function>
+    <function model="stock.move" name="write">
+        <value eval="[ref('demo_turnover_move_out_1')]" />
+        <value
+            eval="{'date': (DateTime.today() - relativedelta(months=4)).strftime('%Y-%m-%d %H:%M:%S')}"
+        />
+    </function>
+    <function model="stock.move" name="write">
+        <value eval="[ref('demo_turnover_move_in_2')]" />
+        <value
+            eval="{'date': (DateTime.today() - relativedelta(months=2)).strftime('%Y-%m-%d %H:%M:%S')}"
+        />
+    </function>
+</odoo>
