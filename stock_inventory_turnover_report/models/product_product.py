@@ -12,7 +12,11 @@ class Product(models.Model):
     def _compute_quantities_in_dict(self, from_date):
         # Filter locations from context -> (quant, in, out)
         domain_locs = self._get_domain_locations()
-        domain_base = [("product_id", "in", self.ids), ("date", ">=", from_date)]
+        domain_base = [
+            ("product_id", "in", self.ids),
+            ("state", "=", "done"),
+            ("date", ">=", from_date),
+        ]
         domain_in = (
             domain_locs[1]
             + domain_base
