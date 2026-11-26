@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo>
+    <record id="view_stock_inv_turns_custom_date_wizard" model="ir.ui.view">
+        <field name="model">stock.inventory.turnover.custom.date</field>
+        <field name="arch" type="xml">
+            <form>
+                <group>
+                    <field name="date_from" />
+                    <field name="date_to" />
+                </group>
+                <footer>
+                    <button
+                        name="action_open_report"
+                        string="Open Report"
+                        type="object"
+                        class="btn-primary"
+                    />
+                    <button string="Cancel" class="btn-secondary" special="cancel" />
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <record
+        id="stock_inv_turns_custom_date_wizard_action"
+        model="ir.actions.act_window"
+    >
+        <field name="name">Inventory Turnover (Custom Dates)</field>
+        <field name="res_model">stock.inventory.turnover.custom.date</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+
+    <menuitem
+        id="menu_stock_inv_turns_custom_date"
+        name="Inventory Turnover (Custom Dates)"
+        parent="stock.menu_warehouse_report"
+        action="stock_inv_turns_custom_date_wizard_action"
+        sequence="51"
+    />
+</odoo>

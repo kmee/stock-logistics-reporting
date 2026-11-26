@@ -39,7 +39,30 @@
                     name="filter_is_in_stock"
                     domain="[('qty_available', '>', 0)]"
                 />
+                <filter
+                    string="In stock at end date"
+                    name="filter_is_in_stock_custom"
+                    domain="[('qty_available_end', '>', 0)]"
+                />
             </field>
+        </field>
+    </record>
+
+    <record id="view_stock_inv_turns_custom_tree" model="ir.ui.view">
+        <field name="model">product.product</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="categ_id" invisible="True" />
+                <field name="display_name" />
+                <field name="total_cost_custom_date" string="Current Cost" />
+                <field name="standard_price" />
+                <field name="qty_available_end" />
+                <field name="qty_available_start" />
+                <field name="qty_consumed_custom_date" />
+                <field name="qty_gotten_custom_date" />
+                <field name="months_of_inventory_custom_date" />
+                <field name="inventory_turns_custom_date" />
+            </list>
         </field>
     </record>
 

@@ -3,13 +3,16 @@
 
 from dateutil.relativedelta import relativedelta
 
-from odoo import fields, models
+from odoo import _, fields, models
+from odoo.exceptions import UserError
+
+DAYS_PER_YEAR = 365.25
 
 
 class Product(models.Model):
     _inherit = "product.product"
 
-    def _compute_quantities_in_dict(self, from_date):
+    def _compute_quantities_in_dict(self, from_date, to_date=None):
         # Filter locations from context -> (quant, in, out)
         domain_locs = self._get_domain_locations()
         domain_base = [
@@ -17,6 +20,8 @@ class Product(models.Model):
             ("state", "=", "done"),
             ("date", ">=", from_date),
         ]
+        if to_date:
+            domain_base.append(("date", "<=", to_date))
         domain_in = (
             domain_locs[1]
             + domain_base
@@ -95,6 +100,51 @@ class Product(models.Model):
                 else 12 / prod.months_of_inventory_12m
             )
 
+    def _compute_inventory_turn_custom_date(self):
+        date_from = self.env.context.get("turnover_date_from")
+        date_to = self.env.context.get("turnover_date_to")
+        if not date_from or not date_to:
+            raise UserError(
+                _("Open this report from Inventory > Reporting > Custom Dates.")
+            )
+        available_start = {
+            x.id: x.qty_available for x in self.with_context(to_date=date_from)
+        }
+        available_end = {
+            x.id: x.qty_available for x in self.with_context(to_date=date_to)
+        }
+        gotten = self._compute_quantities_in_dict(date_from, date_to)
+        period_months = (date_to - date_from).total_seconds() / (
+            86400 * DAYS_PER_YEAR / 12
+        )
+        for prod in self:
+            prod.qty_available_end = available_end.get(prod.id)
+            prod.qty_available_start = available_start.get(prod.id)
+            prod.total_cost_custom_date = prod.qty_available_end * prod.standard_price
+            prod.qty_gotten_custom_date = gotten.get(prod.id)
+            prod.qty_consumed_custom_date = (
+                prod.qty_available_start
+                + prod.qty_gotten_custom_date
+                - prod.qty_available_end
+            )
+            prod.months_of_inventory_custom_date = (
+                0.0
+                if not prod.qty_consumed_custom_date
+                else prod.qty_available_end
+                / prod.qty_consumed_custom_date
+                * period_months
+            )
+            prod.inventory_turns_custom_date = (
+                0.0
+                if not prod.months_of_inventory_custom_date
+                else 12 / prod.months_of_inventory_custom_date
+            )
+
+    def _search_qty_available_end(self, operator, value):
+        date_to = self.env.context.get("turnover_date_to")
+        products = self.with_context(to_date=date_to) if date_to else self
+        return products._search_qty_available(operator, value)
+
     total_cost = fields.Float(
         compute="_compute_inventory_turn_report", help="= Qty. on hand x Current Cost"
     )
@@ -141,4 +191,40 @@ class Product(models.Model):
     inventory_turns_12m = fields.Float(
         compute="_compute_inventory_turn_report",
         help="Inventory Turns / Cycles in the last 12 months",
+    )
+
+    qty_available_end = fields.Float(
+        string="Qty. at End Date",
+        compute="_compute_inventory_turn_custom_date",
+        search="_search_qty_available_end",
+        help="Qty. on hand at the end of the chosen date range",
+    )
+    qty_available_start = fields.Float(
+        string="Qty. at Start Date",
+        compute="_compute_inventory_turn_custom_date",
+        help="Qty. on hand at the start of the chosen date range",
+    )
+    total_cost_custom_date = fields.Float(
+        compute="_compute_inventory_turn_custom_date",
+        help="= Qty. on hand at the end date x Current Cost",
+    )
+    qty_gotten_custom_date = fields.Float(
+        string="Qty. Gotten",
+        compute="_compute_inventory_turn_custom_date",
+        help="Qty. Procured or Produced in the chosen date range",
+    )
+    qty_consumed_custom_date = fields.Float(
+        string="Qty. Consumed",
+        compute="_compute_inventory_turn_custom_date",
+        help="Qty. consumed in the chosen date range",
+    )
+    months_of_inventory_custom_date = fields.Float(
+        string="Months of Inventory",
+        compute="_compute_inventory_turn_custom_date",
+        help="Months of Inventory in the chosen date range, based on the end date",
+    )
+    inventory_turns_custom_date = fields.Float(
+        string="Inventory Turns",
+        compute="_compute_inventory_turn_custom_date",
+        help="Inventory Turns / Cycles in the chosen date range, based on the end date",
     )

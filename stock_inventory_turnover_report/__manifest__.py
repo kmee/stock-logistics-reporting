@@ -15,7 +15,9 @@
         "stock",
     ],
     "data": [
+        "security/ir.model.access.csv",
         "views/product_views.xml",
+        "wizards/stock_inventory_turnover_custom_date.xml",
     ],
     "demo": [
         "demo/stock_inventory_turnover_demo.xml",

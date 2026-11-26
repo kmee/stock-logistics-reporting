@@ -1,2 +1,2 @@
 Report to compute the inventory turnover cycles in the last 6 and 12
-months.
+months, or in a date range chosen by the user.
